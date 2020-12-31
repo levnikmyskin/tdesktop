@@ -165,7 +165,8 @@ QByteArray Settings::serialize() const {
 			<< qint64(_groupCallPushToTalkDelay)
 			<< qint32(0) // Call audio backend
 			<< qint32(_disableCalls ? 1 : 0)
-			<< windowPosition;
+			<< windowPosition
+			<< qint32(_autoHideNotifications ? 1 : 0);
 	}
 	return result;
 }
@@ -239,6 +240,7 @@ void Settings::addFromSerialized(const QByteArray &serialized) {
 	qint32 callAudioBackend = 0;
 	qint32 disableCalls = _disableCalls ? 1 : 0;
 	QByteArray windowPosition;
+	qint32 autoHideNotifications = _autoHideNotifications ? 1 : 0;
 
 	stream >> themesAccentColors;
 	if (!stream.atEnd()) {
@@ -339,9 +341,12 @@ void Settings::addFromSerialized(const QByteArray &serialized) {
 	}
 	if (!stream.atEnd()) {
 		stream >> disableCalls;
-	}
+    }
 	if (!stream.atEnd()) {
 		stream >> windowPosition;
+	}
+    if (!stream.atEnd()) {
+		stream >> autoHideNotifications;
 	}
 	if (stream.status() != QDataStream::Ok) {
 		LOG(("App Error: "
@@ -361,6 +366,7 @@ void Settings::addFromSerialized(const QByteArray &serialized) {
 	_soundNotify = (soundNotify == 1);
 	_desktopNotify = (desktopNotify == 1);
 	_flashBounceNotify = (flashBounceNotify == 1);
+	_autoHideNotifications = (autoHideNotifications == 1);
 	const auto uncheckedNotifyView = static_cast<DBINotifyView>(notifyView);
 	switch (uncheckedNotifyView) {
 	case dbinvShowNothing:
@@ -540,6 +546,7 @@ void Settings::resetOnLastLogout() {
 	_soundNotify = true;
 	_desktopNotify = true;
 	_flashBounceNotify = true;
+	_autoHideNotifications = false;
 	_notifyView = dbinvShowPreview;
 	//_nativeNotifications = std::nullopt;
 	//_notificationsCount = 3;
