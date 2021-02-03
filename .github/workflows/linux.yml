@@ -67,7 +67,7 @@ jobs:
           - "DESKTOP_APP_DISABLE_GTK_INTEGRATION"
 
     env:
-      UPLOAD_ARTIFACT: "false"
+      UPLOAD_ARTIFACT: "true"
 
     steps:
       - name: Get repository name.
@@ -85,6 +85,9 @@ jobs:
           ln -s $LibrariesPath Libraries
 
       - name: Telegram Desktop build.
+        env: 
+          TELEGRAM_API_ID: ${{ secrets.TELEGRAM_API_ID }}
+          TELEGRAM_API_HASH: ${{ secrets.TELEGRAM_API_HASH }}
         run: |
           cd $REPO_NAME/Telegram
 
@@ -101,17 +104,18 @@ jobs:
           -D CMAKE_C_FLAGS="-Werror" \
           -D CMAKE_CXX_FLAGS="-Werror" \
           -D CMAKE_EXE_LINKER_FLAGS="-s" \
-          -D TDESKTOP_API_TEST=ON \
+          -D TDESKTOP_API_ID=$TELEGRAM_API_ID \
+          -D TDESKTOP_API_HASH=$TELEGRAM_API_HASH \
           -D DESKTOP_APP_USE_PACKAGED=OFF \
           -D DESKTOP_APP_DISABLE_CRASH_REPORTS=OFF \
           $DEFINE
 
-          cd ../out/Debug
+          cd ../out/Release
           make -j$(nproc)
 
       - name: Check.
         run: |
-          filePath="$REPO_NAME/out/Debug/bin/Telegram"
+          filePath="$REPO_NAME/out/Release/bin/Telegram"
           if test -f "$filePath"; then
             echo "Build successfully done! :)"
 
@@ -125,7 +129,7 @@ jobs:
       - name: Move artifact.
         if: env.UPLOAD_ARTIFACT == 'true'
         run: |
-          cd $REPO_NAME/out/Debug/bin
+          cd $REPO_NAME/out/Release/bin
           mkdir artifact
           mv Telegram artifact/
       - uses: actions/upload-artifact@master
@@ -133,4 +137,4 @@ jobs:
         name: Upload artifact.
         with:
           name: ${{ env.ARTIFACT_NAME }}
-          path: ${{ env.REPO_NAME }}/out/Debug/bin/artifact/
+          path: ${{ env.REPO_NAME }}/out/Release/bin/artifact/
